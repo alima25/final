@@ -1,0 +1,48 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8">
+  <title>WebZoo — изучай технологии через животных</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <link rel="stylesheet" href="/styles.css">
+</head>
+<body>
+  <header>
+    <h1>Webzoo</h1>
+    <p>Изучай веб-технологии через животных. Собери коллекцию карточек!</p>
+    <nav>
+      <a href="/profile.html">Моя коллекция</a>
+    </nav>
+  </header>
+
+  <main class="container">
+    <section id="topics"></section>
+  </main>
+
+  <footer>
+    <small>Demo: user demo@webzoo.local</small>
+  </footer>
+
+  <script src="/app.js"></script>
+  <script>
+    // Load topics on index
+    window.addEventListener('DOMContentLoaded', async () => {
+      const container = document.getElementById('topics');
+      const res = await fetch('/api/topics');
+      const topics = await res.json();
+      container.innerHTML = topics.map(t => `
+        <article class="card">
+          <div class="emoji">${t.emoji}</div>
+          <h2>${t.name}</h2>
+          <p class="animal">${t.animal}</p>
+          <p class="desc">${t.description}</p>
+          <div class="actions">
+            <a class="btn" href="/topic.html?id=${t.id}">Открыть</a>
+            <a class="btn btn-light" href="/quiz.html?id=${t.id}">Пройти тест</a>
+          </div>
+        </article>
+      `).join('');
+    });
+  </script>
+</body>
+</html>

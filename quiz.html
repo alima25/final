@@ -1,0 +1,88 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8">
+  <title>Тест — WebZoo</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <link rel="stylesheet" href="/styles.css">
+</head>
+<body>
+  <header>
+    <h1>Тест — WebZoo</h1>
+    <nav><a href="/">Главная</a> · <a href="/profile.html">Коллекция</a></nav>
+  </header>
+
+  <main class="container">
+    <section id="quizArea"></section>
+  </main>
+
+  <script>
+    let questions = [];
+    const params = new URLSearchParams(location.search);
+    const topicId = params.get('id');
+
+    async function loadQuiz() {
+      if (!topicId) { document.getElementById('quizArea').innerText = 'Тема не найдена'; return; }
+      const res = await fetch(`/api/topics/${topicId}`);
+      const topic = await res.json();
+      const qRes = await fetch(`/api/topics/${topicId}/questions`);
+      questions = await qRes.json();
+
+      const html = `
+        <div class="topic-header">
+          <div class="big-emoji">${topic.emoji}</div>
+          <h2>${topic.name}</h2>
+          <p>${topic.description}</p>
+        </div>
+
+        <form id="quizForm">
+          ${questions.map(q => `
+            <fieldset class="question" data-qid="${q.id}">
+              <legend>${q.question_text}</legend>
+              <label><input type="radio" name="q${q.id}" value="a"> A) ${q.option_a}</label>
+              <label><input type="radio" name="q${q.id}" value="b"> B) ${q.option_b}</label>
+              <label><input type="radio" name="q${q.id}" value="c"> C) ${q.option_c}</label>
+            </fieldset>
+          `).join('')}
+
+          <div class="actions">
+            <button class="btn" type="button" id="submitBtn">Отправить ответы</button>
+          </div>
+        </form>
+
+        <div id="result"></div>
+      `;
+      document.getElementById('quizArea').innerHTML = html;
+
+      document.getElementById('submitBtn').addEventListener('click', submitQuiz);
+    }
+
+    async function submitQuiz() {
+      const answers = {};
+      questions.forEach(q => {
+        const sel = document.querySelector(`input[name="q${q.id}"]:checked`);
+        if (sel) answers[q.id] = sel.value;
+      });
+
+      const res = await fetch(`/api/quiz/${topicId}/submit`, {
+        method: 'POST',
+        headers: {'Content-Type':'application/json'},
+        body: JSON.stringify({answers})
+      });
+      const data = await res.json();
+      const resultDiv = document.getElementById('result');
+      if (data.passed) {
+        resultDiv.innerHTML = `<p class="success">Поздравляем! Вы ответили верно на ${data.correctCount}/${data.total} — Награда будет выдана.</p>`;
+        // Claim reward
+        await fetch(`/api/rewards/${topicId}/claim`, {method: 'POST'});
+        // Redirect to reward page
+        setTimeout(() => location.href = `/reward.html?id=${topicId}`, 800);
+      } else {
+        resultDiv.innerHTML = `<p class="fail">Вы ответили ${data.correctCount}/${data.total}. Попробуйте ещё раз.</p>`;
+      }
+    }
+
+    window.addEventListener('DOMContentLoaded', loadQuiz);
+  </script>
+</body>
+</html>
