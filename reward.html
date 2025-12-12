@@ -1,0 +1,44 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8">
+  <title>Награда — WebZoo</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <link rel="stylesheet" href="/styles.css">
+</head>
+<body>
+  <header>
+    <h1>Награда</h1>
+    <nav><a href="/">Главная</a> · <a href="/profile.html">Коллекция</a></nav>
+  </header>
+
+  <main class="container">
+    <section id="rewardBox" class="center"></section>
+  </main>
+
+  <script>
+    async function loadReward() {
+      const params = new URLSearchParams(location.search);
+      const id = params.get('id');
+      if (!id) { document.getElementById('rewardBox').innerText = 'Нет данных'; return; }
+      const res = await fetch(`/api/topics/${id}`);
+      if (!res.ok) { document.getElementById('rewardBox').innerText = 'Ошибка'; return; }
+      const t = await res.json();
+      document.getElementById('rewardBox').innerHTML = `
+        <div class="card reward">
+          <div class="big-emoji">${t.emoji}</div>
+          <h2>Новая карточка: ${t.name}</h2>
+          <p class="animal">${t.animal}</p>
+          <p>${t.description}</p>
+          <div class="actions">
+            <a class="btn" href="/profile.html">Посмотреть коллекцию</a>
+            <a class="btn btn-light" href="/">На главную</a>
+          </div>
+        </div>
+      `;
+    }
+
+    window.addEventListener('DOMContentLoaded', loadReward);
+  </script>
+</body>
+</html>

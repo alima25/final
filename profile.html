@@ -1,0 +1,62 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8">
+  <title>Моя коллекция — WebZoo</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <link rel="stylesheet" href="/styles.css">
+</head>
+<body>
+  <header>
+    <h1>Моя коллекция</h1>
+    <nav><a href="/">Главная</a></nav>
+  </header>
+
+  <main class="container">
+    <section id="collection"></section>
+    <section id="allTopics">
+      <h3>Все темы</h3>
+      <div id="allList" class="cards"></div>
+    </section>
+  </main>
+
+  <script>
+    async function loadCollection() {
+      const res = await fetch('/api/users/me/rewards');
+      const earned = await res.json();
+      const earnedIds = new Set(earned.map(e => e.topic_id));
+
+      // Display earned
+      const col = document.getElementById('collection');
+      if (earned.length === 0) {
+        col.innerHTML = '<p>Пока нет карточек. Пройди тесты, чтобы получить карточки!</p>';
+      } else {
+        col.innerHTML = earned.map(e => `
+          <div class="card">
+            <div class="emoji">${e.emoji}</div>
+            <h4>${e.name}</h4>
+            <p class="small">Получено: ${new Date(e.received_at).toLocaleString()}</p>
+          </div>
+        `).join('');
+      }
+
+      // Load all topics and mark locked/unlocked
+      const tRes = await fetch('/api/topics');
+      const topics = await tRes.json();
+      document.getElementById('allList').innerHTML = topics.map(t => `
+        <div class="card ${earnedIds.has(t.id) ? '' : 'locked'}">
+          <div class="emoji">${t.emoji}</div>
+          <h4>${t.name}</h4>
+          <p class="animal">${t.animal}</p>
+          <div class="actions">
+            <a class="btn" href="/topic.html?id=${t.id}">Открыть</a>
+            <a class="btn btn-light" href="/quiz.html?id=${t.id}">Тест</a>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    window.addEventListener('DOMContentLoaded', loadCollection);
+  </script>
+</body>
+</html>

@@ -1,0 +1,41 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8">
+  <title>Тема — WebZoo</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <link rel="stylesheet" href="/styles.css">
+</head>
+<body>
+  <header>
+    <h1 id="siteTitle">WebZoo</h1>
+    <nav><a href="/">Главная</a> · <a href="/profile.html">Коллекция</a></nav>
+  </header>
+
+  <main class="container">
+    <section id="topicBox" class="topic-card"></section>
+  </main>
+
+  <script>
+    async function loadTopic() {
+      const params = new URLSearchParams(location.search);
+      const id = params.get('id');
+      if (!id) { document.getElementById('topicBox').innerText = 'Тема не найдена'; return; }
+      const res = await fetch(`/api/topics/${id}`);
+      if (!res.ok) { document.getElementById('topicBox').innerText = 'Ошибка'; return; }
+      const t = await res.json();
+      document.getElementById('topicBox').innerHTML = `
+        <div class="big-emoji">${t.emoji}</div>
+        <h2>${t.name}</h2>
+        <p class="animal">${t.animal}</p>
+        <p class="desc">${t.description}</p>
+        <div class="actions">
+          <a class="btn" href="/quiz.html?id=${t.id}">Пройти тест</a>
+        </div>
+      `;
+    }
+
+    window.addEventListener('DOMContentLoaded', loadTopic);
+  </script>
+</body>
+</html>
